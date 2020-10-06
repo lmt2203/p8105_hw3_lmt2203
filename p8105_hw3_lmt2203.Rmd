@@ -5,3 +5,45 @@ date: "10/6/2020"
 output: github_document
 ---
 
+```{r setup, include = FALSE}
+library(tidyverse)
+library(ggridges)
+library(patchwork)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,  
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom")) 
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_color_viridis_d
+scale_colour_continuous = scale_color_viridis_c
+```
+
+# Problem 1
+
+Load the Instacart dataset
+
+```{r}
+library(p8105.datasets)
+data("instacart")
+print(instacart)
+```
+
+This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns
+
+```{r}
+
+```
+
+# Problem 2
+
+# Problem 3
+
