@@ -92,5 +92,21 @@ instacart %>%
 
 # Problem 2
 
+Load and tidy the accelerometer dataset
+
+```{r}
+accel_df = read_csv("./data/accel_data.csv") %>% 
+  janitor::clean_names()
+```
+
 # Problem 3
 
+Load the data 
+
+```{r}
+library(p8105.datasets)
+data("ny_noaa")
+ny_noaa
+```
+
+The dataset has `r ncol(ny_noaa)` variables, specifically  *`r names(ny_noaa)`* and `r nrow(ny_noaa)`
