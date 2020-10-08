@@ -72,7 +72,7 @@ instacart %>%
   group_by(aisle) %>% 
   count(product_name) %>% 
   mutate(rank = min_rank(desc(n))) %>% 
-  filter (rank < 4 ) %>% 
+  filter(rank < 4 ) %>% 
   arrange(aisle, rank) %>% 
   knitr::kable()
 ```
@@ -109,4 +109,12 @@ data("ny_noaa")
 ny_noaa
 ```
 
-The dataset has `r ncol(ny_noaa)` variables, specifically  *`r names(ny_noaa)`* and `r nrow(ny_noaa)`
+The dataset has `r ncol(ny_noaa)` variables, specifically  *`r names(ny_noaa)`* and `r nrow(ny_noaa)` observations. 
+
+Data cleaning
+
+```{r}
+ny_noaa %>% 
+  separate(date, into = c("year", "month", "day"), sep = "-")
+```
+
