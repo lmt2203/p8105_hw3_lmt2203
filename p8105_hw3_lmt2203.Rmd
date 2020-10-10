@@ -28,20 +28,17 @@ scale_colour_continuous = scale_color_viridis_c
 ```
 
 # Problem 1
+5 week of accelerometer data. each activity.* are the activity count for each minute of a 24-hour day starting at midnight. 
 
-Load the Instacart dataset
+Observations are the level of items in orders by user. There are users / order variables -- user ID, order ID, order day, and order hour. There are also item variables -- name, aisle, department, and some numeric codes.
+
+How many aisles, and which are most items from?
 
 ```{r}
 library(p8105.datasets)
 data("instacart")
 print(instacart)
 ```
-
-This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns. 
-
-Observations are the level of items in orders by user. There are users / order variables -- user ID, order ID, order day, and order hour. There are also item variables -- name, aisle, department, and some numeric codes.
-
-How many aisles, and which are most items from?
 
 ```{r}
 instacart %>% 
@@ -92,12 +89,28 @@ instacart %>%
 
 # Problem 2
 
-Load and tidy the accelerometer dataset
+#### Load, tidy and wrangle the Instacart dataset. Final dataset should include a weekday vs weekend variable, encode data with reasonable variable classes. Describe (what variables exist, how many obs)
+
 
 ```{r}
 accel_df = read_csv("./data/accel_data.csv") %>% 
-  janitor::clean_names()
+  janitor::clean_names() 
 ```
+
+
+#### Aggregate across minutes to create a total activity variable for each day, and create a table showing these totals. Any trends?
+
+```{r}
+
+```
+
+#### Make a single-panel plot that shows 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph
+
+```{r}
+
+```
+
+
 
 # Problem 3
 
@@ -106,7 +119,6 @@ Load the data
 ```{r}
 library(p8105.datasets)
 data("ny_noaa")
-ny_noaa
 ```
 
 The dataset has `r ncol(ny_noaa)` variables, specifically  *`r names(ny_noaa)`* and `r nrow(ny_noaa)` observations. 
@@ -114,7 +126,21 @@ The dataset has `r ncol(ny_noaa)` variables, specifically  *`r names(ny_noaa)`* 
 Data cleaning
 
 ```{r}
-ny_noaa %>% 
+ny_noaa_tidy = ny_noaa %>% 
   separate(date, into = c("year", "month", "day"), sep = "-")
 ```
 
+Last part: use `patchwork`
+
+```{r}
+
+```
+
+#### Make a two-panel plot the average 
+
+```{r}
+
+```
+
+
+x = tmin, y = tmax
