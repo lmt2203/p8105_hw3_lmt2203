@@ -102,13 +102,14 @@ accel_df = read_csv("./data/accel_data.csv") %>%
     names_prefix = "activity.",
     values_to = "activity_count"
   ) %>% 
-  mutate(day = factor(day)) %>% 
+  mutate(day = factor(day),
+         day = fct_relevel(day, c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))) %>% 
   mutate(wd_or_wknd = case_when(
         day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday") ~ "weekday",
         day %in% c("Saturday", "Sunday") ~ "weekend",
          TRUE ~ "")
   ) %>% 
-  mutate(min_of_the_day = factor(min_of_the_day),
+  mutate(min_of_the_day = as.numeric(min_of_the_day),
          wd_or_wknd = factor(wd_or_wknd)
   )
 
@@ -121,17 +122,30 @@ accel_df
 ```{r}
 total_activity_table = 
   accel_df %>% 
-  group_by(day_id, day) %>% 
+  group_by(week, day_id, day) %>% 
   summarize(total_activity_each_day = sum(activity_count)) %>% 
   knitr::kable()
 
-total_activity_table
+accel_df %>% 
+  group_by(week, day_id, day) %>% 
+  summarize(total_activity_each_day = sum(activity_count)) %>% 
+  pivot_wider(
+    names_from = day,
+    values_from = total_activity_each_day) %>% 
+   knitr::kable(digit = 1)
+
+
 ```
 
 #### Make a single-panel plot that shows 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph
+minute x-axis, activity_count y-axis
 
 ```{r}
-
+accel_df %>%  
+  ggplot(aes(x = min_of_the_day, y = activity_count, color = day)) +
+  geom_line(size = 1.5, alpha = 0.5) +  
+  geom_smooth(se = FALSE) +
+  labs(title = "24-hour activity time courses")
 ```
 
 
@@ -151,7 +165,7 @@ Data cleaning
 
 ```{r}
 ny_noaa_tidy = ny_noaa %>% 
-  separate(date, into = c("year", "month", "day"), sep = "-")
+  separate(date, into = c("year", "month", "day"), sep = "-", convert = TRUE)
 ```
 
 Last part: use `patchwork`
