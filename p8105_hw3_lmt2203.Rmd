@@ -28,11 +28,8 @@ scale_colour_continuous = scale_color_viridis_c
 ```
 
 # Problem 1
-5 week of accelerometer data. each activity.* are the activity count for each minute of a 24-hour day starting at midnight. 
 
-Observations are the level of items in orders by user. There are users / order variables -- user ID, order ID, order day, and order hour. There are also item variables -- name, aisle, department, and some numeric codes.
-
-How many aisles, and which are most items from?
+Load the dataset
 
 ```{r}
 library(p8105.datasets)
@@ -40,13 +37,19 @@ data("instacart")
 print(instacart)
 ```
 
+This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns.
+
+Observations are the level of items in orders by user. There are users / order variables – user ID, order ID, order day, and order hour. There are also item variables – name, aisle, department, and some numeric codes.
+
+How many aisles, and which are most items from?
+
 ```{r}
 instacart %>% 
-  count(aisle) %>% 
-  arrange(desc(n))        #descending order
+  count(aisle) %>%
+  arrange(desc(n))       
 ```
 
-Let's make a plot
+Let's make a plot shows the number of items ordered in each aisle
 
 ```{r}
 instacart %>% 
@@ -61,11 +64,11 @@ instacart %>%
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1))
 ```
 
-Let's make a table
+Let's make a table showing the three most popular items in each of the 3 listed aisles
 
 ```{r}
 instacart %>% 
-  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetable fruits")) %>% 
+  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>% 
   group_by(aisle) %>% 
   count(product_name) %>% 
   mutate(rank = min_rank(desc(n))) %>% 
@@ -74,7 +77,7 @@ instacart %>%
   knitr::kable()
 ```
 
-Apple vs. ice cream
+Make a table showing the mean hour of the day at which Pink Lady Apple and Coffee Ice Cream are ordred on each day of the week
 
 ```{r}
 instacart %>% 
