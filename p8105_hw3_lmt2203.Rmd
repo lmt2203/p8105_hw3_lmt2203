@@ -163,24 +163,65 @@ The dataset has `r ncol(ny_noaa)` variables, specifically  *`r names(ny_noaa)`* 
 #### Data cleaning
 
 ```{r}
-ny_noaa_tidy = 
+ny_noaa_df = 
   ny_noaa %>% 
-  separate(date, into = c("year", "month", "day"), convert = TRUE)
+  separate(date, c("year", "month", "day"), convert = TRUE) %>% 
+  mutate(tmax = as.numeric(tmax)/10,
+         tmin = as.numeric(tmin)/10,
+         prcp = prcp/10)
 
-ny_noaa_tidy
+snow_count = 
+  ny_noaa_df %>% 
+  group_by(snow) %>% 
+  summarize(snow_count = n()) %>% 
+  arrange(desc(snow_count))
+
 ```
 
-Last part: use `patchwork`
+#### Two-panel plot showing the average max temperature in January and July 
 
 ```{r}
-
+ny_noaa_df %>% 
+  group_by(month) %>% 
+  filter(month %in% c("01", "07")) %>% 
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>% 
+  ggplot(aes(x = year, y = mean_tmax, group = id, color = id)) +
+  geom_point() +
+  geom_path() +
+  facet_grid(~ month)
+  theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1)) +
+  labs(title = "Mean average temperature for January and July across stations and years") +
+  theme(legend.title = element_blank())
 ```
 
-#### Make a two-panel plot the average 
+#### Two-panel plot showing tmax vs tmin and distribution of snowfall
 
-```{r}
+```{r, fig.height = 6, fig.width = 8}
+tmax_tmin_plot = 
+  ny_noaa %>% 
+  drop_na(tmax, tmin) %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex() +
+  labs(
+    title = "Maximum vs Minimum Temperatures from 1981 to 2010",
+    x = "Minimum Temperature",
+    y = "Maximum Temperature",
+    caption = "From the ny_noaa dataset; max and min temperature from 1981 to 2010"
+  )
+  
+snow_fall_plot =
+  ny_noaa %>% 
+  filter(0 < snow & snow < 100) %>% 
+  ggplot(aes(x = snow, y = as.factor(year))) +
+  geom_density_ridges(alpha = .5, adjust = .5) +
+  theme(axis.test.x = element_text(angle = 20, vjust = 1, hjust = 1)) +
+  labs(
+    title = "Snowfall distribution",
+    x = "Snowfall (in mm)",
+    y = "Year" 
+  ) +
+  scale_x_continuous(breaks = c(0, 25, 50, 75, 100, 125, 150, 175))
 
+tmax_tmin_plot + snow_fall_plot
 ```
 
-
-x = tmin, y = tmax
