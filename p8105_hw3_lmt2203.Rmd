@@ -5,14 +5,15 @@ date: "10/6/2020"
 output: github_document
 ---
 
-```{r setup, include = FALSE}
+```{r setup}
 library(tidyverse)
 library(ggridges)
 library(patchwork)
 
 knitr::opts_chunk$set(
-  fig.width = 6,
+  fig.width = 12,
   fig.asp = .6,  
+  fig.height = 6,
   out.width = "90%"
 )
 
@@ -149,10 +150,8 @@ accel_df %>%
 ```
 
 
-
 # Problem 3
-
-Load the data 
+Load the NY NOAA dataset
 
 ```{r}
 library(p8105.datasets)
@@ -161,11 +160,14 @@ data("ny_noaa")
 
 The dataset has `r ncol(ny_noaa)` variables, specifically  *`r names(ny_noaa)`* and `r nrow(ny_noaa)` observations. 
 
-Data cleaning
+#### Data cleaning
 
 ```{r}
-ny_noaa_tidy = ny_noaa %>% 
-  separate(date, into = c("year", "month", "day"), sep = "-", convert = TRUE)
+ny_noaa_tidy = 
+  ny_noaa %>% 
+  separate(date, into = c("year", "month", "day"), convert = TRUE)
+
+ny_noaa_tidy
 ```
 
 Last part: use `patchwork`
