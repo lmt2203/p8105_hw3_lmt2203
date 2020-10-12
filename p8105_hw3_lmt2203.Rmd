@@ -104,7 +104,7 @@ accel_df = read_csv("./data/accel_data.csv") %>%
     values_to = "activity_count"
   ) %>% 
   mutate(day = factor(day),
-         day = fct_relevel(day, c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))) %>% 
+         day = forcats::fct_relevel(day, c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))) %>% 
   mutate(wd_or_wknd = case_when(
         day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday") ~ "weekday",
         day %in% c("Saturday", "Sunday") ~ "weekend",
@@ -117,38 +117,37 @@ accel_df = read_csv("./data/accel_data.csv") %>%
 accel_df
 ```
 
+The dataset contains `r nrow(accel_df)` observations of `r ncol(accel_df)` variables, including *week*, *day_id*, *min_of_the_day* show each minute of the day for the 5 weeks that data were collected, *activity_count* for each minute, and  *wd_or_wknd* variable that tells you if a given day is weekday or weekend. 
 
-#### Aggregate across minutes to create a total activity variable for each day, and create a table showing these totals. Any trends?
+#### Table showing total activity for each day of the 5 weeks
 
 ```{r}
-total_activity_table = 
-  accel_df %>% 
-  group_by(week, day_id, day) %>% 
-  summarize(total_activity_each_day = sum(activity_count)) %>% 
-  knitr::kable()
-
 accel_df %>% 
-  group_by(week, day_id, day) %>% 
+  group_by(week, day) %>% 
   summarize(total_activity_each_day = sum(activity_count)) %>% 
   pivot_wider(
     names_from = day,
     values_from = total_activity_each_day) %>% 
-   knitr::kable(digit = 1)
-
-
+   knitr::kable(digit = 1) 
 ```
 
-#### Make a single-panel plot that shows 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph
-minute x-axis, activity_count y-axis
+We can see from the table that Saturdays seem to have the widest range of activity count, from 1440 to 607175 while Tuesdays-Thursdays have a relatively small variance in activity count. The least activity count is 1440 on Saturdays of week 4 and week 5 while the highest activity count is 685910 on Monday of week 3. Overall, the man whose accelerometer data we are looking at are consistenly active during midweek.
+
+#### Single-panel plot that shows 24-hour activity time courses for each day 
 
 ```{r}
 accel_df %>%  
   ggplot(aes(x = min_of_the_day, y = activity_count, color = day)) +
-  geom_line(size = 1.5, alpha = 0.5) +  
-  geom_smooth(se = FALSE) +
-  labs(title = "24-hour activity time courses")
+  geom_line(size = 1.5, alpha = .6) +  
+  geom_smooth() +
+  stat_smooth()
+  labs(title = "24-hour activity time courses",
+       x = "Minute of the day",
+       y = "Activity count",
+       caption = "5-week activity count from a 63 year-old male, BMI = 25, diagnosed with congestive heart failure") 
 ```
 
+Based on this graph we could see that the man generally has low activity at night time (midnight to ~6-7am), then higher activity at day time and drop back down in the evening. He is highly active during the day on Sunday, and much more active late evening on Friday/Saturday. Other days of the week show lots of overlapping, meaning he is more routine during mid-week. 
 
 # Problem 3
 Load the NY NOAA dataset
@@ -158,70 +157,80 @@ library(p8105.datasets)
 data("ny_noaa")
 ```
 
-The dataset has `r ncol(ny_noaa)` variables, specifically  *`r names(ny_noaa)`* and `r nrow(ny_noaa)` observations. 
+The NY NOAA dataset contains data collectd from all New York state weather stations from January 1, 1981 to December 31, 2010. It has `r nrow(ny_noaa)` observations of `r ncol(ny_noaa)` variables, specifically  *`r names(ny_noaa)`*. Variable ID show weather station ID; prcp, snow, snwd, tmax, tmin are precipitation (mm), snowfall(mm), snow depth(mm), maximum temperature(tenths of degrees C), and minimum temperature(tenths of degrees C) of a given date, respectively. There are lots of missing values: the number of missing values for precipitation, snowfall, snow depth, min temp, max temp are `r sum(is.na(ny_noaa$prcp))`, `r sum(is.na(ny_noaa$snow))`, `r sum(is.na(ny_noaa$snwd))`, `r sum(is.na(ny_noaa$tmax))`, `r sum(is.na(ny_noaa$tmin))` respectively.
 
 #### Data cleaning
 
 ```{r}
 ny_noaa_df = 
   ny_noaa %>% 
-  separate(date, c("year", "month", "day"), convert = TRUE) %>% 
-  mutate(tmax = as.numeric(tmax)/10,
-         tmin = as.numeric(tmin)/10,
-         prcp = prcp/10)
+  separate(date, into = c("year", "month", "day"), sep = "-", convert = TRUE) %>% 
+  mutate(
+    tmax = as.numeric(tmax)/10,
+    tmin = as.numeric(tmin)/10,
+    prcp = as.numeric(prcp),
+    snow = as.numeric(snow),
+    snwd = as.numeric(snwd))
 
 snow_count = 
   ny_noaa_df %>% 
+  drop_na() %>% 
   group_by(snow) %>% 
   summarize(snow_count = n()) %>% 
   arrange(desc(snow_count))
 
+snow_count
 ```
 
-#### Two-panel plot showing the average max temperature in January and July 
+The most commonly observed value for snowfall is **0**, with 1112758 days reported no snow. This seems reasonable considering for the majority time of a year, New York doesn't have any snow. The second most common value is 25 and third most common is 13. 
 
-```{r}
-ny_noaa_df %>% 
-  group_by(month) %>% 
-  filter(month %in% c("01", "07")) %>% 
+#### Two-panel plot showing the average max temperature in January and July in each station across years
+
+```{r, warning = FALSE}
+jan_july_tmax = 
+  ny_noaa_df %>% 
+  filter(month %in% c("1", "7")) %>%
+  group_by(id, year, month) %>% 
   summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>% 
-  ggplot(aes(x = year, y = mean_tmax, group = id, color = id)) +
+  mutate(month = recode(month, `1` = "January", `7` = "July"))
+
+ggplot(jan_july_tmax, aes(x = year, y = mean_tmax, group = id, color = id)) +
   geom_point() +
   geom_path() +
-  facet_grid(~ month)
-  theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1)) +
-  labs(title = "Mean average temperature for January and July across stations and years") +
-  theme(legend.title = element_blank())
+  facet_grid(~ month) +
+  labs(title = "Average max temperature for January and July across stations and years",
+       x = "Year",
+       y = "Average Max Temperature (C)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  theme(legend.position = "none")
 ```
 
-#### Two-panel plot showing tmax vs tmin and distribution of snowfall
+Average max temperature in January ranging from -10C to 10C is lower than average max temperature in July, which is in the 20-30 degree Celcius range. There are several noticeable outliers, particularly January of 1982 where the average max temperature is much lower than -10C and July of 1987 where average max temperature is unusually low (~13-14C).
 
-```{r, fig.height = 6, fig.width = 8}
+#### Two-panel plot showing (1) tmax vs tmin for full dataset and (2) distribution of snowfall greater than 0 and less than 100
+
+```{r, warning = FALSE}
 tmax_tmin_plot = 
-  ny_noaa %>% 
+  ny_noaa_df %>% 
   drop_na(tmax, tmin) %>% 
   ggplot(aes(x = tmin, y = tmax)) +
-  geom_hex() +
+  geom_density2d() +
   labs(
     title = "Maximum vs Minimum Temperatures from 1981 to 2010",
     x = "Minimum Temperature",
-    y = "Maximum Temperature",
-    caption = "From the ny_noaa dataset; max and min temperature from 1981 to 2010"
-  )
+    y = "Maximum Temperature")
   
 snow_fall_plot =
-  ny_noaa %>% 
-  filter(0 < snow & snow < 100) %>% 
+  ny_noaa_df %>% 
+  filter(snow > 0 & snow < 100) %>% 
   ggplot(aes(x = snow, y = as.factor(year))) +
-  geom_density_ridges(alpha = .5, adjust = .5) +
-  theme(axis.test.x = element_text(angle = 20, vjust = 1, hjust = 1)) +
+  geom_density_ridges(alpha = .3, adjust = .5) +
   labs(
-    title = "Snowfall distribution",
-    x = "Snowfall (in mm)",
-    y = "Year" 
-  ) +
+    title = "Distribution of Snowfall from 1981 to 2010",
+    x = "Snowfall (mm)",
+    y = "Year") +
   scale_x_continuous(breaks = c(0, 25, 50, 75, 100, 125, 150, 175))
 
-tmax_tmin_plot + snow_fall_plot
+tmax_tmin_plot / snow_fall_plot
 ```
 
